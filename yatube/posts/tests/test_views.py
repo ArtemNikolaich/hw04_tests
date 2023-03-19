@@ -39,22 +39,20 @@ class TaskPagesTests(TestCase):
         """URL-адрес использует соответствующий шаблон."""
         # Собираем в словарь пары "имя_html_шаблона: reverse(name)"
         templates_page_names = {
-            'posts/index.html': reverse('posts:index'),
-            'posts/group_list.html': reverse('posts:group_list',
-                                             kwargs={'slug': 'test'}),
-            'posts/profile.html': reverse('posts:profile',
-                                          kwargs={'username': 'StasBasov'}),
-            'posts/post_detail.html': reverse('posts:post_detail',
-                                              kwargs={'post_id':
-                                                      self.post.id}),
-            'posts/create_post.html': reverse('posts:post_edit',
-                                              kwargs={'post_id':
-                                                      self.post.id}),
-            'posts/create_post.html': reverse('posts:post_create'),
+            reverse('posts:index'): 'posts/index.html',
+            reverse('posts:group_list', kwargs={'slug': 'test'}):
+            'posts/group_list.html',
+            reverse('posts:profile', kwargs={'username': 'StasBasov'}):
+            'posts/profile.html',
+            reverse('posts:post_detail', kwargs={'post_id': self.post.id}):
+            'posts/post_detail.html',
+            reverse('posts:post_edit', kwargs={'post_id': self.post.id}):
+            'posts/create_post.html',
+            reverse('posts:post_create'): 'posts/create_post.html',
         }
         # Проверяем, что при обращении к name
         # вызывается соответствующий HTML-шаблон
-        for template, reverse_name in templates_page_names.items():
+        for reverse_name, template in templates_page_names.items():
             with self.subTest(template=template):
                 response = self.authorized_client.get(reverse_name)
                 self.assertTemplateUsed(response, template)
