@@ -33,6 +33,11 @@ class TaskPagesTests(TestCase):
         self.user = User.objects.create_user(username='StasBasov')
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
+        self.author_of_post = User.objects.create_user(
+            username='author_of_post'
+        )
+        self.authorized_client_of_post = Client()
+        self.authorized_client_of_post.force_login(self.author_of_post)
 
     # Проверяем используемые шаблоны
     def test_pages_uses_correct_template(self):
@@ -48,14 +53,19 @@ class TaskPagesTests(TestCase):
             'posts/post_detail.html',
             reverse('posts:post_edit', kwargs={'post_id': self.post.id}):
             'posts/create_post.html',
-            reverse('posts:post_create'): 'posts/create_post.html',
+            reverse('posts:post_create'): 'posts/create_post.html'
         }
         # Проверяем, что при обращении к name
         # вызывается соответствующий HTML-шаблон
         for reverse_name, template in templates_page_names.items():
-            with self.subTest(template=template):
-                response = self.authorized_client.get(reverse_name)
-                self.assertTemplateUsed(response, template)
+            with self.subTest(reverse_name=reverse_name):
+                if reverse_name == reverse('posts:post_edit',
+                                           kwargs={'post_id': self.post.id}):
+                    response = self.authorized_client_of_post.get(reverse_name)
+                else:
+                    response = self.authorized_client.get(reverse_name)
+                    self.assertEqual(response.status_code, HTTPStatus.OK)
+                    self.assertTemplateUsed(response, template,)
 
     def test_index_view_context(self):
         response = self.client.get(reverse('posts:index'))
