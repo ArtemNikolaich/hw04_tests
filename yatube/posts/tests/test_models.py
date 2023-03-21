@@ -1,9 +1,7 @@
-from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from ..models import Group, Post
-
-User = get_user_model()
+from ..models import Group, Post, User
+from posts.constants import MAX_POST_TEXT_LENGTH
 
 
 class PostModelTest(TestCase):
@@ -24,9 +22,13 @@ class PostModelTest(TestCase):
 
     def test_models_have_correct_object_names(self):
         """Проверяем, что у моделей корректно работает __str__."""
-        expected_text = self.post.text[:15]
-        self.assertEqual(expected_text, str(self.post))
-        self.assertEqual(self.group.title, str(self.group))
+        expected_results = {
+            str(self.post): self.post.text[:MAX_POST_TEXT_LENGTH],
+            str(self.group): self.group.title,
+        }
+        for obj, expected_text in expected_results.items():
+            with self.subTest(obj=obj):
+                self.assertEqual(expected_text, obj)
 
     def test_post_model_verbose_name(self):
         """Тестирование verbose_name атрибутов модели Post"""

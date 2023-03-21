@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
+from posts.constants import MAX_POST_TEXT_LENGTH
+
 User = get_user_model()
 
 
@@ -45,4 +47,4 @@ class Post(models.Model):
         verbose_name_plural = 'Посты'
 
     def __str__(self) -> str:
-        return self.text[:15]
+        return self.text[:MAX_POST_TEXT_LENGTH]

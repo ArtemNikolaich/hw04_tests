@@ -1,11 +1,9 @@
-from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
-
-from ..models import Group, Post
-
 from http import HTTPStatus
 
-User = get_user_model()
+from django.test import Client, TestCase
+from django.urls import reverse
+
+from ..models import Group, Post, User
 
 
 class PostURLTest(TestCase):
@@ -35,10 +33,10 @@ class PostURLTest(TestCase):
     def test_open_page(self):
         """Тестирование общедоступных страниц"""
         context = [
-            '/',
-            '/group/test/',
-            '/profile/auth/',
-            '/posts/1/',
+            reverse('posts:index'),
+            reverse('posts:group_list', kwargs={'slug': 'test'}),
+            reverse('posts:profile', kwargs={'username': 'auth'}),
+            reverse('posts:post_detail', kwargs={'post_id': self.post.id}),
         ]
         for address in context:
             with self.subTest(address=address):
@@ -48,7 +46,7 @@ class PostURLTest(TestCase):
     def test_close_page(self):
         """Тестирование скрытых страниц"""
         context = [
-            '/create/',
+            reverse('posts:post_create'),
         ]
         for address in context:
             with self.subTest(address=address):
@@ -58,7 +56,7 @@ class PostURLTest(TestCase):
     def test_author_page(self):
         """Тестирование страниц доступных только автору"""
         context = [
-            '/posts/1/edit/',
+            reverse('posts:post_edit', kwargs={'post_id': self.post.id}),
         ]
         for address in context:
             with self.subTest(address=address):
@@ -77,3 +75,19 @@ class PostURLTest(TestCase):
             with self.subTest(address=address):
                 response = self.guest_client.get(address)
                 self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_redirect_for_anonymous_user(self):
+        """Тестирование редиректа неавторизованного пользователя"""
+        context = [
+            reverse('posts:post_create'),
+            reverse('posts:post_edit', kwargs={'post_id': self.post.id}),
+        ]
+        for address in context:
+            with self.subTest(address=address):
+                response = self.guest_client.get(address, follow=True)
+                self.assertRedirects(
+                    response,
+                    f'{reverse("login")}?next={address}',
+                    status_code=HTTPStatus.FOUND,
+                    target_status_code=HTTPStatus.OK,
+                )

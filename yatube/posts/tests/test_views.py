@@ -1,13 +1,10 @@
-from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
-from django.urls import reverse
-from django import forms
-
-from ..models import Group, Post
-
 from http import HTTPStatus
 
-User = get_user_model()
+from django import forms
+from django.test import Client, TestCase
+from django.urls import reverse
+
+from ..models import Group, Post, User
 
 
 class TaskPagesTests(TestCase):
@@ -27,9 +24,7 @@ class TaskPagesTests(TestCase):
         )
 
     def setUp(self):
-        # Создаём неавторизованный клиент
         self.guest_client = Client()
-        # Создаём авторизованный клиент
         self.user = User.objects.create_user(username='StasBasov')
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
@@ -39,10 +34,8 @@ class TaskPagesTests(TestCase):
         self.authorized_client_of_post = Client()
         self.authorized_client_of_post.force_login(self.author_of_post)
 
-    # Проверяем используемые шаблоны
     def test_pages_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
-        # Собираем в словарь пары "имя_html_шаблона: reverse(name)"
         templates_page_names = {
             reverse('posts:index'): 'posts/index.html',
             reverse('posts:group_list', kwargs={'slug': 'test'}):
@@ -55,8 +48,6 @@ class TaskPagesTests(TestCase):
             'posts/create_post.html',
             reverse('posts:post_create'): 'posts/create_post.html'
         }
-        # Проверяем, что при обращении к name
-        # вызывается соответствующий HTML-шаблон
         for reverse_name, template in templates_page_names.items():
             with self.subTest(reverse_name=reverse_name):
                 if reverse_name == reverse('posts:post_edit',
@@ -135,10 +126,6 @@ class TaskPagesTests(TestCase):
             data=post_data,
             follow=True
         )
-
-        # Проверяем наличие поста на главной странице,
-        # странице выбранной группы
-        # и в профиле автора
         pages_to_check = {
             reverse('posts:index'): post_data['text'],
             reverse('posts:group_list', kwargs={'slug': new_group.slug}):
@@ -168,8 +155,6 @@ class TaskPagesTests(TestCase):
             data=post_data,
             follow=True
         )
-
-        # Проверяем отсутствие поста на странице выбранной группы
         response = self.authorized_client.get(
             reverse('posts:group_list', kwargs={'slug': self.group.slug})
         )
